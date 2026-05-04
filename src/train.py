@@ -1,13 +1,9 @@
-"""Модуль обучения модели классификации типов стекла."""
-
 import configparser
 import hashlib
 import os
 import pickle
 import sys
-import traceback
 from datetime import datetime
-import pandas as pd
 import yaml
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score, accuracy_score
@@ -124,7 +120,13 @@ class ModelTrainer:
                 yaml.dump(data, f, default_flow_style=False)
 
         log_path = os.path.join(exp_dir, "logs.txt")
-        with open("logfile.log", 'r') as src, open(log_path, 'w') as dst:
-            dst.write(src.read())
+        try:
+            with open("logfile.log", 'r', encoding='utf-8', errors='ignore') as src, \
+                 open(log_path, 'w', encoding='utf-8') as dst:
+                dst.write(src.read())
+        except Exception:
+            with open("logfile.log", 'r', encoding='latin-1', errors='ignore') as src, \
+                 open(log_path, 'w', encoding='utf-8') as dst:
+                dst.write(src.read())
 
         return exp_dir

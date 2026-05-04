@@ -1,5 +1,3 @@
-"""Модуль предсказания класса стекла на основе обученной модели."""
-
 import os
 import pickle
 import numpy as np
@@ -60,8 +58,7 @@ class GlassPredictor:
         Предсказание класса стекла по заданным признакам.
 
         Args:
-            features (list): 9 признаков стекла [RI, Na, Mg, Al, Si, K,
-                             Ca, Ba, Fe].
+            features (list): 9 признаков стекла.
 
         Returns:
             int: предсказанный класс (1-7) или None при ошибке.

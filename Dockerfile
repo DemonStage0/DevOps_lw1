@@ -8,8 +8,11 @@ RUN apt-get update && apt-get install -y curl && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Копируем всё в /app
 COPY . .
-RUN mkdir -p experiments
+
+# Создаём нужные директории
+RUN mkdir -p experiments data
 
 EXPOSE 8000
 

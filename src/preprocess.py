@@ -1,9 +1,4 @@
-"""Модуль предобработки данных для классификации типов стекла."""
-
 import configparser
-import os
-import sys
-import traceback
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from logger import Logger

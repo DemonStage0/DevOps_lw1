@@ -9,49 +9,39 @@ LOG_FILE = os.path.join(os.getcwd(), "logfile.log")
 
 class Logger:
     """
-        Class for logging behaviour of data exporting - object of ExportingTool class
+    Класс для логирования поведения компонентов системы.
     """
 
     def __init__(self, show: bool) -> None:
         """
-            Re-defined __init__ method which sets show parametr
+        Инициализация логгера.
 
         Args:
-            show (bool): if set all logs will be shown in terminal
+            show (bool): если True, все логи выводятся в терминал.
         """
         self.show = show
 
     def get_console_handler(self) -> logging.StreamHandler:
-        """
-            Class method the aim of which is getting a console handler to show logs on terminal
-
-        Returns:
-            logging.StreamHandler: handler object for streaming output through terminal
-        """
+        """Получение обработчика для вывода в консоль."""
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(FORMATTER)
         return console_handler
 
     def get_file_handler(self) -> logging.FileHandler:
-        """
-            Class method the aim of which is getting a file handler to write logs in file LOG_FILE
-
-        Returns:
-            logging.FileHandler: handler object for streaming output through std::filestream
-        """
+        """Получение обработчика для записи в файл."""
         file_handler = logging.FileHandler(LOG_FILE, mode='w')
         file_handler.setFormatter(FORMATTER)
         return file_handler
 
     def get_logger(self, logger_name: str):
         """
-            Class method which creates logger with certain name
+        Создание и настройка логгера.
 
         Args:
-            logger_name (str): name for logger
+            logger_name (str): имя логгера.
 
         Returns:
-            logger: object of Logger class
+            logging.Logger: настроенный объект логгера.
         """
         logger = logging.getLogger(logger_name)
         logger.setLevel(logging.DEBUG)

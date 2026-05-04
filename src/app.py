@@ -1,11 +1,8 @@
-"""FastAPI микросервис для классификации типов стекла."""
-
 import os
 import sys
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 
-# Добавление пути к src для корректных импортов
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
 from predict import GlassPredictor
@@ -26,10 +23,7 @@ predictor = GlassPredictor()
 
 @app.get("/train")
 async def train_model():
-    """
-    Запуск обучения модели.
-    В ответе возвращается F1 метрика или сообщение об ошибке.
-    """
+    """Запуск обучения модели."""
     try:
         trainer = ModelTrainer()
         result = trainer.train()
@@ -58,10 +52,7 @@ async def predict_class(
     Ba: float = Query(0.0, description="Барий"),
     Fe: float = Query(0.0, description="Железо")
 ):
-    """
-    Предсказание класса стекла по 9 признакам.
-    Если модель не обучена, возвращается ошибка 404.
-    """
+    """Предсказание класса стекла по 9 признакам."""
     if not os.path.exists("experiments"):
         raise HTTPException(
             status_code=404,
