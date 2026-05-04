@@ -3,6 +3,9 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDS = credentials('DevOps_lw1')
+        LC_ALL = "en_US.UTF-8"
+        LANG = "en_US.UTF-8"
+        LANGUAGE = "en_US.UTF-8"
     }
 
     options {
@@ -11,94 +14,61 @@ pipeline {
     }
 
     stages {
-        stage('Login to DockerHub') {
+
+        stage('Login') {
             steps {
-                script {
-                    bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
-                }
+                bat 'chcp 65001 && docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
             }
         }
 
-        stage('Pull Docker Image') {
+        stage('Pull image') {
             steps {
-                script {
-                    bat 'docker pull demonstage0/devops_lw1:latest'
-                }
+                bat 'chcp 65001 && docker pull demonstage0/devops_lw1:latest'
             }
         }
 
-        stage('Stop and Remove Old Container') {
+        stage('Run container') {
             steps {
-                script {
-                    bat 'docker stop glass-api 2>nul'
-                    bat 'docker rm glass-api 2>nul'
-                    echo "Old container cleaned up"
-                }
+                bat 'chcp 65001 && docker run --name devops_lw1_cd -p 8000:8000 -d demonstage0/devops_lw1:latest'
             }
         }
 
-        stage('Run Container') {
+        stage('Wait for service') {
             steps {
-                script {
-                    bat 'docker run --name glass-api -p 8000:8000 -d demonstage0/devops_lw1:latest'
-                }
+                bat 'chcp 65001 && ping -n 6 127.0.0.1 > nul'
             }
         }
 
-        stage('Wait for Service Ready') {
+        stage('Functional test - health check') {
             steps {
-                script {
-                    bat 'timeout /t 10 /nobreak'
-                    bat 'curl -f http://localhost:8000/ || (echo "Waiting..." && timeout /t 5 && curl http://localhost:8000/)'
-                }
+                bat 'chcp 65001 && curl -s http://localhost:8000/'
             }
         }
 
-        stage('Functional Test - Health Check') {
+        stage('Functional test - train model') {
             steps {
-                script {
-                    bat 'curl -f http://localhost:8000/ || exit 1'
-                }
+                bat 'chcp 65001 && curl -s http://localhost:8000/train'
             }
         }
 
-        stage('Functional Test - Train Model') {
+        stage('Functional test - predict') {
             steps {
-                script {
-                    bat 'docker exec glass-api python -c "import requests; r = requests.get(\'http://localhost:8000/train\'); print(r.json()); assert r.status_code == 200"'
-                }
+                bat 'chcp 65001 && curl -s "http://localhost:8000/predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0"'
             }
         }
 
-        stage('Functional Test - Predict') {
+        stage('Container logs') {
             steps {
-                script {
-                    bat 'docker exec glass-api python -c "import requests; r = requests.get(\'http://localhost:8000/predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0\'); print(r.json()); assert r.status_code == 200"'
-                }
-            }
-        }
-
-        stage('Show Container Logs') {
-            steps {
-                script {
-                    bat 'docker logs --tail 30 glass-api'
-                }
+                bat 'chcp 65001 && docker logs --tail 50 devops_lw1_cd'
             }
         }
     }
 
     post {
         always {
-            script {
-                bat 'docker logout 2>nul || echo "Logged out"'
-                echo 'CD Pipeline finished'
+            node('windows') {
+                bat 'chcp 65001 && docker stop devops_lw1_cd && docker rm devops_lw1_cd && docker logout'
             }
-        }
-        success {
-            echo 'CD Pipeline completed! All functional tests passed!'
-        }
-        failure {
-            echo 'CD Pipeline failed! Check logs above.'
         }
     }
 }

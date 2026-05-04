@@ -11,3 +11,4 @@ services:
       - ./logfile.log:/app/logfile.log
     environment:
       - PYTHONUNBUFFERED=1
+    restart: unless-stopped

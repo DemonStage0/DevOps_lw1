@@ -3,6 +3,9 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDS = credentials('DevOps_lw1')
+        LC_ALL = "en_US.UTF-8"
+        LANG = "en_US.UTF-8"
+        LANGUAGE = "en_US.UTF-8"
     }
 
     options {
@@ -11,82 +14,99 @@ pipeline {
     }
 
     stages {
-        stage('Clone repository') {
+        stage('Clone github repository') {
             steps {
-                script {
-                    cleanWs()
-                    bat "git clone -b main https://github.com/DemonStage0/DevOps_lw1.git"
-                }
+                cleanWs()
+                bat 'chcp 65001 && git clone -b main https://github.com/DemonStage0/DevOps_lw1.git'
             }
         }
 
-        stage('Login to DockerHub') {
+        stage('Checkout repo dir') {
             steps {
-                script {
-                    bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
-                }
+                bat 'chcp 65001 && cd DevOps_lw1 && dir'
             }
         }
 
-        stage('Build Docker image') {
+        stage('Login') {
+            steps {
+                bat 'chcp 65001 && docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
+            }
+        }
+
+        stage('Create and run docker container') {
             steps {
                 script {
-                    dir('DevOps_lw1') {
-                        bat 'docker build -t demonstage0/devops_lw1:latest .'
+                    try {
+                        bat 'chcp 65001 && cd DevOps_lw1 && docker-compose build'
+                    } finally {
+                        bat '''
+                            chcp 65001
+                            cd DevOps_lw1
+                            docker-compose up -d
+                        '''
                     }
                 }
             }
         }
 
-        stage('Run Unit Tests in Container') {
+        stage('Run unit tests') {
             steps {
-                script {
-                    dir('DevOps_lw1') {
-                        bat 'docker run --name test-container -d demonstage0/devops_lw1:latest'
-                        bat 'timeout /t 5 /nobreak'
-                        bat 'docker exec test-container python -m pytest src/unit_tests/ -v || exit /b 0'
-                        bat 'docker stop test-container && docker rm test-container'
-                    }
+                dir("DevOps_lw1") {
+                    bat '''
+                        chcp 65001
+                        for /f %%i in ('docker ps -qf "name=^devops_lw1-web-1"') do set containerId=%%i
+                        echo Container ID: %containerId%
+                        IF "%containerId%" == "" (
+                            echo "No container running"
+                            exit /b 1
+                        ) ELSE (
+                            docker exec %containerId% python -m pytest src/unit_tests/ -v
+                        )
+                    '''
                 }
             }
         }
 
-        stage('Test API Endpoints') {
+        stage('Checkout container logs') {
             steps {
-                script {
-                    dir('DevOps_lw1') {
-                        bat 'docker run --name api-test -d -p 8000:8000 demonstage0/devops_lw1:latest'
-                        bat 'timeout /t 5 /nobreak'
-                        bat 'curl http://localhost:8000/ || echo "Health check"'
-                        bat 'docker exec api-test python -c "import requests; print(requests.get(\'http://localhost:8000/train\').json())"'
-                        bat 'docker exec api-test python -c "import requests; print(requests.get(\'http://localhost:8000/predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0\').json())"'
-                        bat 'docker stop api-test && docker rm api-test'
-                    }
+                dir("DevOps_lw1") {
+                    bat '''
+                        chcp 65001
+                        for /f %%i in ('docker ps -qf "name=^devops_lw1-web-1"') do set containerId=%%i
+                        echo Container ID: %containerId%
+                        IF "%containerId%" == "" (
+                            echo "No container running"
+                        ) ELSE (
+                            docker logs --tail 100 %containerId%
+                        )
+                    '''
                 }
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Check unit tests results') {
             steps {
-                script {
-                    bat 'docker push demonstage0/devops_lw1:latest'
+                dir("DevOps_lw1") {
+                    bat '''
+                        chcp 65001
+                        docker-compose logs -t --tail 10
+                    '''
                 }
+            }
+        }
+
+        stage('Push') {
+            steps {
+                bat 'chcp 65001 && docker tag devops_lw1_web:latest demonstage0/devops_lw1:latest && docker push demonstage0/devops_lw1:latest'
             }
         }
     }
 
     post {
         always {
-            script {
-                bat 'docker logout 2>nul || echo "Already logged out"'
-                bat 'docker system prune -f 2>nul || echo "Cleanup done"'
+            node('windows') {
+                bat 'chcp 65001 && docker logout'
             }
-        }
-        success {
-            echo 'CI Pipeline completed successfully!'
-        }
-        failure {
-            echo 'CI Pipeline failed! Check logs above.'
         }
     }
 }
