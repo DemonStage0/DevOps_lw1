@@ -104,7 +104,10 @@ pipeline {
 
     post {
         always {
-            node('windows') {
+            script {
+                dir("DevOps_lw1") {
+                    bat 'chcp 65001 && docker-compose down'
+                }
                 bat 'chcp 65001 && docker logout'
             }
         }

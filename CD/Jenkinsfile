@@ -27,14 +27,20 @@ pipeline {
             }
         }
 
-        stage('Force cleanup') {
+        stage('Stop old containers') {
             steps {
                 script {
                     try {
                         bat 'chcp 65001 && docker stop devops_lw1_cd'
                         bat 'chcp 65001 && docker rm devops_lw1_cd'
                     } catch (Exception e) {
-                        echo 'Nothing to clean'
+                        echo 'No old CD container to remove'
+                    }
+                    try {
+                        bat 'chcp 65001 && docker stop devops_lw1-web-1'
+                        bat 'chcp 65001 && docker rm devops_lw1-web-1'
+                    } catch (Exception e) {
+                        echo 'No old CI container to remove'
                     }
                 }
             }
@@ -84,7 +90,7 @@ pipeline {
                     bat 'chcp 65001 && docker stop devops_lw1_cd'
                     bat 'chcp 65001 && docker rm devops_lw1_cd'
                 } catch (Exception e) {
-                    echo 'Cleanup done'
+                    echo 'Container already removed'
                 }
                 bat 'chcp 65001 && docker logout'
             }
