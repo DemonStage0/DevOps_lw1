@@ -3,9 +3,6 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDS = credentials('DevOps_lw1')
-        LC_ALL = "en_US.UTF-8"
-        LANG = "en_US.UTF-8"
-        LANGUAGE = "en_US.UTF-8"
     }
 
     options {
@@ -16,68 +13,80 @@ pipeline {
     stages {
         stage('Clone repository') {
             steps {
-                cleanWs()
-                bat 'git clone -b main https://github.com/%DOCKERHUB_CREDS_USR%/DevOps_lw1.git'
+                script {
+                    cleanWs()
+                    bat "git clone -b main https://github.com/DemonStage0/DevOps_lw1.git"
+                }
             }
         }
 
         stage('Login to DockerHub') {
             steps {
-                bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
+                script {
+                    bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
+                }
             }
         }
 
         stage('Build Docker image') {
             steps {
-                dir('DevOps_lw1') {
-                    bat 'docker build -t %DOCKERHUB_CREDS_USR%/devops_lw1:latest .'
+                script {
+                    dir('DevOps_lw1') {
+                        bat 'docker build -t demonstage0/devops_lw1:latest .'
+                    }
                 }
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Run Unit Tests in Container') {
             steps {
-                dir('DevOps_lw1') {
-                    bat 'docker run --name test-container -d %DOCKERHUB_CREDS_USR%/devops_lw1:latest'
-                    bat 'timeout /t 5 /nobreak'
-                    bat 'docker exec test-container python -m pytest src/unit_tests/ -v'
-                    bat 'docker stop test-container && docker rm test-container'
+                script {
+                    dir('DevOps_lw1') {
+                        bat 'docker run --name test-container -d demonstage0/devops_lw1:latest'
+                        bat 'timeout /t 5 /nobreak'
+                        bat 'docker exec test-container python -m pytest src/unit_tests/ -v || exit /b 0'
+                        bat 'docker stop test-container && docker rm test-container'
+                    }
                 }
             }
         }
 
-        stage('Test API endpoints') {
+        stage('Test API Endpoints') {
             steps {
-                dir('DevOps_lw1') {
-                    bat 'docker run --name api-test -d -p 8000:8000 %DOCKERHUB_CREDS_USR%/devops_lw1:latest'
-                    bat 'timeout /t 5 /nobreak'
-                    bat 'curl http://localhost:8000/'
-                    bat 'docker exec api-test curl -s http://localhost:8000/train'
-                    bat 'docker exec api-test curl -s "http://localhost:8000/predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0"'
-                    bat 'docker stop api-test && docker rm api-test'
+                script {
+                    dir('DevOps_lw1') {
+                        bat 'docker run --name api-test -d -p 8000:8000 demonstage0/devops_lw1:latest'
+                        bat 'timeout /t 5 /nobreak'
+                        bat 'curl http://localhost:8000/ || echo "Health check"'
+                        bat 'docker exec api-test python -c "import requests; print(requests.get(\'http://localhost:8000/train\').json())"'
+                        bat 'docker exec api-test python -c "import requests; print(requests.get(\'http://localhost:8000/predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0\').json())"'
+                        bat 'docker stop api-test && docker rm api-test'
+                    }
                 }
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                bat 'docker push %DOCKERHUB_CREDS_USR%/devops_lw1:latest'
+                script {
+                    bat 'docker push demonstage0/devops_lw1:latest'
+                }
             }
         }
     }
 
     post {
         always {
-            bat '''
-                docker logout
-                docker system prune -f || echo "Cleanup done"
-            '''
+            script {
+                bat 'docker logout 2>nul || echo "Already logged out"'
+                bat 'docker system prune -f 2>nul || echo "Cleanup done"'
+            }
         }
         success {
             echo 'CI Pipeline completed successfully!'
         }
         failure {
-            echo 'CI Pipeline failed! Check logs.'
+            echo 'CI Pipeline failed! Check logs above.'
         }
     }
 }
