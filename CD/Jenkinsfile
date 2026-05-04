@@ -29,7 +29,12 @@ pipeline {
 
         stage('Stop and remove old container') {
             steps {
-                bat 'chcp 65001 && docker stop devops_lw1_cd 2>nul & docker rm devops_lw1_cd 2>nul & echo Cleanup done'
+                bat '''
+                    chcp 65001
+                    docker stop devops_lw1_cd 2>nul || echo Container not running
+                    docker rm devops_lw1_cd 2>nul || echo Container not found
+                    echo Cleanup done
+                '''
             }
         }
 
@@ -73,7 +78,12 @@ pipeline {
     post {
         always {
             node('windows') {
-                bat 'chcp 65001 && docker stop devops_lw1_cd 2>nul & docker rm devops_lw1_cd 2>nul & docker logout'
+                bat '''
+                    chcp 65001
+                    docker stop devops_lw1_cd 2>nul || echo Already stopped
+                    docker rm devops_lw1_cd 2>nul || echo Already removed
+                    docker logout
+                '''
             }
         }
         success {
