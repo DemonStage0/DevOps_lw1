@@ -1,0 +1,90 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDS = credentials('DevOps_lw1')
+        LC_ALL = "en_US.UTF-8"
+        LANG = "en_US.UTF-8"
+        LANGUAGE = "en_US.UTF-8"
+    }
+
+    options {
+        timestamps()
+        skipDefaultCheckout(true)
+    }
+
+    stages {
+        stage('Login to DockerHub') {
+            steps {
+                bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
+            }
+        }
+
+        stage('Pull Docker Image') {
+            steps {
+                bat 'docker pull %DOCKERHUB_CREDS_USR%/devops_lw1:latest'
+            }
+        }
+
+        stage('Stop Old Container') {
+            steps {
+                bat '''
+                    docker stop glass-api 2>nul
+                    docker rm glass-api 2>nul
+                    echo "Old container cleaned"
+                '''
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                bat 'docker run --name glass-api -p 8000:8000 -d %DOCKERHUB_CREDS_USR%/devops_lw1:latest'
+            }
+        }
+
+        stage('Wait for Service') {
+            steps {
+                bat 'timeout /t 10 /nobreak'
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                bat 'curl -f http://localhost:8000/ || exit 1'
+            }
+        }
+
+        stage('Test Train Endpoint') {
+            steps {
+                bat 'curl -f http://localhost:8000/train || exit 1'
+            }
+        }
+
+        stage('Test Predict Endpoint') {
+            steps {
+                bat 'curl -f "http://localhost:8000/predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0" || exit 1'
+            }
+        }
+
+        stage('Container Logs') {
+            steps {
+                bat 'docker logs --tail 50 glass-api'
+            }
+        }
+    }
+
+    post {
+        always {
+            bat '''
+                docker logout
+                echo "CD Pipeline finished"
+            '''
+        }
+        success {
+            echo 'CD Pipeline completed! All functional tests passed!'
+        }
+        failure {
+            echo 'CD Pipeline failed! Check logs.'
+        }
+    }
+}

@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: devops_lw1-web-1
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./experiments:/app/experiments
+      - ./logfile.log:/app/logfile.log
+    environment:
+      - PYTHONUNBUFFERED=1

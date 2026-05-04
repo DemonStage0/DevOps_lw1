@@ -1,0 +1,11 @@
+coverage
+dvc
+numpy
+pandas
+scikit-learn
+pyyaml
+fastapi
+uvicorn
+pytest
+requests
+python-multipart
