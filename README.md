@@ -1,2 +1,82 @@
-# mle-template
-Classic MLE template with CI/CD pipelines
+# DevOps_lw1 - Glass Classification ML Pipeline
+
+## Описание проекта
+Проект реализует классический жизненный цикл разработки ML модели для классификации типов стекла с использованием CI/CD пайплайна. Модель классифицирует стекло по 7 классам на основе 9 химических признаков.
+
+## Структура проекта
+- CI/Jenkinsfile - CI пайплайн для сборки Docker образа
+- CD/Jenkinsfile - CD пайплайн для функционального тестирования
+- data/glass.csv - исходный датасет с характеристиками стекла
+- src/app.py - FastAPI микросервис с эндпоинтами /train и /predict
+- src/train.py - обучение модели RandomForestClassifier с системой экспериментов
+- src/predict.py - загрузка модели и предсказание класса стекла
+- src/preprocess.py - предобработка и разделение данных на train/test
+- src/logger.py - модуль логирования
+- src/unit_tests/test_preprocess.py - unit-тесты предобработки данных
+- src/unit_tests/test_training.py - unit-тесты обучения модели
+- tests/test_0.json - тестовые данные для building_windows_float_processed
+- tests/test_1.json - тестовые данные для building_windows_non_float_processed
+- experiments/ - директория с экспериментами (exp_1, exp_2, ...)
+- config.ini - гиперпараметры модели и пути к данным
+- Dockerfile - конфигурация сборки Docker образа
+- docker-compose.yml - конфигурация запуска контейнера
+- requirements.txt - зависимости проекта
+
+## Установка и запуск
+
+### Локальный запуск
+pip install -r requirements.txt
+uvicorn src.app:app --host 0.0.0.0 --port 8000 --reload
+
+### Docker запуск
+docker-compose build
+docker-compose up -d
+
+## API Endpoints
+
+### Обучение модели
+GET /train
+Ответ: {"message": "Модель обучена успешно. F1 = 0.8562"}
+
+### Предсказание класса стекла
+GET /predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0
+Ответ: {"predicted_class": 1}
+
+### Классы стекла
+1 - building_windows_float_processed
+2 - building_windows_non_float_processed
+3 - vehicle_windows_float_processed
+5 - containers
+6 - tableware
+7 - headlamps
+
+## CI/CD Pipeline
+
+### CI Pipeline (Jenkins)
+- Клонирование репозитория из GitHub
+- Сборка Docker образа с моделью
+- Запуск unit-тестов внутри контейнера
+- Тестирование API эндпоинтов
+- Публикация образа в Docker Hub
+- Триггер: Pull Request в ветку main
+
+### CD Pipeline (Jenkins)
+- Загрузка образа из Docker Hub
+- Запуск контейнера с моделью
+- Функциональное тестирование эндпоинтов /train и /predict
+- Проверка корректности предсказаний
+- Триггер: по требованию или после CI
+
+## Технологии
+- Python 3.9 + scikit-learn (Random Forest)
+- FastAPI + Uvicorn
+- Docker + Docker Compose
+- Jenkins (CI/CD)
+- Git + GitHub
+
+## Эксперименты
+Каждый эксперимент сохраняется в experiments/exp_N/ и содержит:
+- config.yml - параметры модели и хэш
+- trained_model.pkl - сериализованная модель
+- metrics.yml - метрики качества
+- logs.txt - логи обучения

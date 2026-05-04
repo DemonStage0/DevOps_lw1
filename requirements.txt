@@ -1,5 +1,4 @@
 coverage
-dvc
 numpy
 pandas
 scikit-learn
