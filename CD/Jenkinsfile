@@ -29,12 +29,14 @@ pipeline {
 
         stage('Stop and remove old container') {
             steps {
-                bat '''
-                    chcp 65001
-                    docker stop devops_lw1_cd 2>nul || echo Container not running
-                    docker rm devops_lw1_cd 2>nul || echo Container not found
-                    echo Cleanup done
-                '''
+                script {
+                    try {
+                        bat 'chcp 65001 && docker stop devops_lw1_cd'
+                        bat 'chcp 65001 && docker rm devops_lw1_cd'
+                    } catch (Exception e) {
+                        echo 'No old container to remove'
+                    }
+                }
             }
         }
 
@@ -52,13 +54,13 @@ pipeline {
 
         stage('Functional test - health check') {
             steps {
-                bat 'chcp 65001 && curl -s http://localhost:8000/ || exit 1'
+                bat 'chcp 65001 && curl -s http://localhost:8000/'
             }
         }
 
         stage('Functional test - train model') {
             steps {
-                bat 'chcp 65001 && curl -s "http://localhost:8000/train"'
+                bat 'chcp 65001 && curl -s http://localhost:8000/train'
             }
         }
 
@@ -77,13 +79,14 @@ pipeline {
 
     post {
         always {
-            node('windows') {
-                bat '''
-                    chcp 65001
-                    docker stop devops_lw1_cd 2>nul || echo Already stopped
-                    docker rm devops_lw1_cd 2>nul || echo Already removed
-                    docker logout
-                '''
+            script {
+                try {
+                    bat 'chcp 65001 && docker stop devops_lw1_cd'
+                    bat 'chcp 65001 && docker rm devops_lw1_cd'
+                } catch (Exception e) {
+                    echo 'Container already cleaned'
+                }
+                bat 'chcp 65001 && docker logout'
             }
         }
         success {
