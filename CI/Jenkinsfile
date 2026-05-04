@@ -97,7 +97,7 @@ pipeline {
 
         stage('Push') {
             steps {
-                bat 'chcp 65001 && docker tag devops_lw1-web:latest demonstage0/devops_lw1:latest && docker push demonstage0/devops_lw1:latest'
+                bat 'chcp 65001 && docker tag devops_lw1-web:latest demonstage/devops_lw1:latest && docker push demonstage/devops_lw1:latest'
             }
         }
     }

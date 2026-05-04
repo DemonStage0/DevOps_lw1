@@ -23,7 +23,7 @@ pipeline {
 
         stage('Pull image') {
             steps {
-                bat 'chcp 65001 && docker pull demonstage0/devops_lw1:latest'
+                bat 'chcp 65001 && docker pull demonstage/devops_lw1:latest'
             }
         }
 
@@ -35,7 +35,7 @@ pipeline {
 
         stage('Run container') {
             steps {
-                bat 'chcp 65001 && docker run --name devops_lw1_cd -p 8000:8000 -d demonstage0/devops_lw1:latest'
+                bat 'chcp 65001 && docker run --name devops_lw1_cd -p 8000:8000 -d demonstage/devops_lw1:latest'
             }
         }
 
