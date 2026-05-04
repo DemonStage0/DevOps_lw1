@@ -27,6 +27,12 @@ pipeline {
             }
         }
 
+        stage('Stop and remove old container') {
+            steps {
+                bat 'chcp 65001 && docker stop devops_lw1_cd 2>nul & docker rm devops_lw1_cd 2>nul & echo Cleanup done'
+            }
+        }
+
         stage('Run container') {
             steps {
                 bat 'chcp 65001 && docker run --name devops_lw1_cd -p 8000:8000 -d demonstage0/devops_lw1:latest'
@@ -35,25 +41,25 @@ pipeline {
 
         stage('Wait for service') {
             steps {
-                bat 'chcp 65001 && ping -n 6 127.0.0.1 > nul'
+                bat 'chcp 65001 && ping -n 11 127.0.0.1 > nul'
             }
         }
 
         stage('Functional test - health check') {
             steps {
-                bat 'chcp 65001 && curl -s http://localhost:8000/'
+                bat 'chcp 65001 && curl -s http://localhost:8000/ || exit 1'
             }
         }
 
         stage('Functional test - train model') {
             steps {
-                bat 'chcp 65001 && curl -s http://localhost:8000/train'
+                bat 'chcp 65001 && curl -s "http://localhost:8000/train"'
             }
         }
 
         stage('Functional test - predict') {
             steps {
-                bat 'chcp 65001 && curl -s "http://localhost:8000/predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0"'
+                bat 'chcp 65001 && curl -s "http://localhost:8000/predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0&Fe=0"'
             }
         }
 
@@ -67,8 +73,14 @@ pipeline {
     post {
         always {
             node('windows') {
-                bat 'chcp 65001 && docker stop devops_lw1_cd && docker rm devops_lw1_cd && docker logout'
+                bat 'chcp 65001 && docker stop devops_lw1_cd 2>nul & docker rm devops_lw1_cd 2>nul & docker logout'
             }
+        }
+        success {
+            echo 'CD Pipeline completed! All functional tests passed!'
+        }
+        failure {
+            echo 'CD Pipeline failed! Check logs above.'
         }
     }
 }
