@@ -1,5 +1,3 @@
-"""Unit-тесты для модуля предобработки данных."""
-
 import os
 import sys
 import unittest

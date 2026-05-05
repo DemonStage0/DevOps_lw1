@@ -4,51 +4,72 @@
 Проект реализует классический жизненный цикл разработки ML модели для классификации типов стекла с использованием CI/CD пайплайна. Модель классифицирует стекло по 7 классам на основе 9 химических признаков.
 
 ## Структура проекта
-- CI/Jenkinsfile - CI пайплайн для сборки Docker образа
-- CD/Jenkinsfile - CD пайплайн для функционального тестирования
-- data/glass.csv - исходный датасет с характеристиками стекла
-- src/app.py - FastAPI микросервис с эндпоинтами /train и /predict
-- src/train.py - обучение модели RandomForestClassifier с системой экспериментов
-- src/predict.py - загрузка модели и предсказание класса стекла
-- src/preprocess.py - предобработка и разделение данных на train/test
-- src/logger.py - модуль логирования
-- src/unit_tests/test_preprocess.py - unit-тесты предобработки данных
-- src/unit_tests/test_training.py - unit-тесты обучения модели
-- tests/test_0.json - тестовые данные для building_windows_float_processed
-- tests/test_1.json - тестовые данные для building_windows_non_float_processed
-- experiments/ - директория с экспериментами (exp_1, exp_2, ...)
-- config.ini - гиперпараметры модели и пути к данным
-- Dockerfile - конфигурация сборки Docker образа
-- docker-compose.yml - конфигурация запуска контейнера
-- requirements.txt - зависимости проекта
+```
+DevOps_lw1/
+├── CI/
+│   └── Jenkinsfile
+├── CD/
+│   └── Jenkinsfile
+├── data/
+│   └── glass.csv
+├── src/
+│   ├── unit_tests/
+│   │   ├── test_preprocess.py
+│   │   └── test_training.py
+│   ├── app.py
+│   ├── logger.py
+│   ├── predict.py
+│   ├── preprocess.py
+│   └── train.py
+├── tests/
+│   ├── test_0.json
+│   └── test_1.json
+├── .gitignore
+├── config.ini
+├── docker-compose.yml
+├── Dockerfile
+├── README.md
+├── requirements.txt
+└── requirements_freeze.txt
+```
 
 ## Установка и запуск
 
 ### Локальный запуск
+```
 pip install -r requirements.txt
 uvicorn src.app:app --host 0.0.0.0 --port 8000 --reload
+```
 
 ### Docker запуск
+```
 docker-compose build
 docker-compose up -d
+```
 
 ## API Endpoints
 
 ### Обучение модели
+```
 GET /train
 Ответ: {"message": "Модель обучена успешно. F1 = 0.8562"}
+```
 
 ### Предсказание класса стекла
+```
 GET /predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&Fe=0.0
 Ответ: {"predicted_class": 1}
+```
 
 ### Классы стекла
+```
 1 - building_windows_float_processed
 2 - building_windows_non_float_processed
 3 - vehicle_windows_float_processed
 5 - containers
 6 - tableware
 7 - headlamps
+```
 
 ## CI/CD Pipeline
 

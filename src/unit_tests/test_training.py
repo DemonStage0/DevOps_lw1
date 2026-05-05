@@ -1,5 +1,3 @@
-"""Unit-тесты для модуля обучения модели."""
-
 import os
 import sys
 import unittest
