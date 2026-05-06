@@ -1,3 +1,5 @@
+"""API тесты для FastAPI микросервиса."""
+
 import os
 import sys
 import shutil
@@ -6,6 +8,7 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(1, os.path.join(os.getcwd(), "src"))
 from app import app
+from predict import GlassPredictor
 
 
 class TestAPI(unittest.TestCase):
@@ -16,9 +19,19 @@ class TestAPI(unittest.TestCase):
         cls.client = TestClient(app)
 
     def setUp(self) -> None:
-        """Удаляем experiments перед каждым тестом для изоляции."""
-        if os.path.exists("experiments"):
-            shutil.rmtree("experiments")
+        """Очистка модели и experiments для изоляции тестов."""
+        from app import predictor
+        predictor.model = None
+        predictor.scaler = None
+
+        exp_path = "experiments"
+        if os.path.exists(exp_path):
+            for item in os.listdir(exp_path):
+                item_path = os.path.join(exp_path, item)
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
 
     def test_root(self):
         response = self.client.get("/")
