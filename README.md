@@ -7,23 +7,25 @@
 ```
 DevOps_lw1/
 ├── CI/
-│   └── Jenkinsfile
+│ └── Jenkinsfile
 ├── CD/
-│   └── Jenkinsfile
+│ └── Jenkinsfile
 ├── data/
-│   └── glass.csv
+│ └── glass.csv
 ├── src/
-│   ├── unit_tests/
-│   │   ├── test_preprocess.py
-│   │   └── test_training.py
-│   ├── app.py
-│   ├── logger.py
-│   ├── predict.py
-│   ├── preprocess.py
-│   └── train.py
+│ ├── unit_tests/
+│ │ ├── test_api.py
+│ │ ├── test_predict.py
+│ │ ├── test_preprocess.py
+│ │ └── test_training.py
+│ ├── app.py
+│ ├── logger.py
+│ ├── predict.py
+│ ├── preprocess.py
+│ └── train.py
 ├── tests/
-│   ├── test_0.json
-│   └── test_1.json
+│ ├── test_0.json
+│ └── test_1.json
 ├── .gitignore
 ├── config.ini
 ├── docker-compose.yml
@@ -49,6 +51,12 @@ docker-compose up -d
 
 ## API Endpoints
 
+### Health check
+```
+GET /
+Ответ: {"message": "Glass Classification API is running"}
+```
+
 ### Обучение модели
 ```
 GET /train
@@ -71,22 +79,25 @@ GET /predict?RI=1.52101&Na=13.64&Mg=4.49&Al=1.1&Si=71.78&K=0.06&Ca=8.75&Ba=0.0&F
 7 - headlamps
 ```
 
+## Тестирование
+
+```
+python -m pytest src/unit_tests/ -v
+```
+
 ## CI/CD Pipeline
 
 ### CI Pipeline (Jenkins)
 - Клонирование репозитория из GitHub
 - Сборка Docker образа с моделью
 - Запуск unit-тестов внутри контейнера
-- Тестирование API эндпоинтов
 - Публикация образа в Docker Hub
-- Триггер: Pull Request в ветку main
 
 ### CD Pipeline (Jenkins)
 - Загрузка образа из Docker Hub
 - Запуск контейнера с моделью
-- Функциональное тестирование эндпоинтов /train и /predict
+- Функциональное тестирование эндпоинтов /, /train и /predict
 - Проверка корректности предсказаний
-- Триггер: по требованию или после CI
 
 ## Технологии
 - Python 3.9 + scikit-learn (Random Forest)
