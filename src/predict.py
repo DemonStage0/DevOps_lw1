@@ -1,6 +1,8 @@
 import os
 import pickle
 import numpy as np
+import pandas as pd
+
 from logger import Logger
 
 SHOW_LOG = True
@@ -67,7 +69,7 @@ class GlassPredictor:
             return None
 
         X = np.array(features).reshape(1, -1)
-        X_scaled = self.scaler.transform(X)
+        X_scaled = self.scaler.transform(pd.DataFrame(X, columns=self.scaler.feature_names_in_))
         prediction = int(self.model.predict(X_scaled)[0])
 
         self.log.info(f"Предсказание: {prediction} для {features}")

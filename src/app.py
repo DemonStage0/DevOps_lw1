@@ -21,6 +21,11 @@ app = FastAPI(
 predictor = GlassPredictor()
 
 
+@app.get("/")
+async def root():
+    return {"message": "Glass Classification API is running"}
+
+
 @app.get("/train")
 async def train_model():
     """Запуск обучения модели."""
